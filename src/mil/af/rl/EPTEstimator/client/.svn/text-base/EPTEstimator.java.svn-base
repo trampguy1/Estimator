@@ -1,0 +1,375 @@
+package mil.af.rl.EPTEstimator.client;
+
+
+
+import java.util.ArrayList;
+
+
+
+import mil.af.rl.EPTEstimator.shared.FieldVerifier;
+
+import com.google.gwt.cell.client.TextCell;
+import com.google.gwt.cell.client.Cell;
+import com.google.gwt.cell.client.CheckboxCell;
+import com.google.gwt.core.client.EntryPoint;
+import com.google.gwt.core.client.GWT;
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.dom.client.KeyCodes;
+import com.google.gwt.event.dom.client.KeyUpEvent;
+import com.google.gwt.event.dom.client.KeyUpHandler;
+import com.google.gwt.user.cellview.client.CellList;
+import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.CheckBox;
+import com.google.gwt.user.client.ui.DialogBox;
+import com.google.gwt.user.client.ui.FlexTable;
+import com.google.gwt.user.client.ui.Grid;
+import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.ListBox;
+import com.google.gwt.user.client.ui.RootPanel;
+import com.google.gwt.user.client.ui.ScrollPanel;
+import com.google.gwt.user.client.ui.TextArea;
+import com.google.gwt.user.client.ui.TextBox;
+import com.google.gwt.user.client.ui.TextBoxBase;
+import com.google.gwt.user.client.ui.VerticalPanel;
+import java.text.DecimalFormat;
+
+/**
+ * Entry point classes define <code>onModuleLoad()</code>.
+ */
+public class EPTEstimator implements EntryPoint {
+	/**
+	 * The message displayed to the user when the server cannot be reached or
+	 * returns an error.
+	 */
+	private static final String SERVER_ERROR = "An error occurred while "
+			+ "attempting to contact the server. Please check your network "
+			+ "connection and try again.";
+
+	/**
+	 * Create a remote service proxy to talk to the server-side Greeting service.
+	 */
+	private final CreateEPTAsync EPTService = GWT
+			.create(CreateEPT.class);
+
+	/**
+	 * This is the entry point method.
+	 */
+		
+
+	
+	public void onModuleLoad() {
+		final TextArea currentStep = new TextArea();
+		currentStep.setText("Ready to Add an Effect");
+		currentStep.setReadOnly(true);
+		currentStep.setStylePrimaryName("currentStep");
+		
+		final Button extendButton = new Button("Extend"); 
+		
+		final Button addEventButton = new Button("Add Effect");
+		addEventButton.setStylePrimaryName("addEvent");
+		addEventButton.setFocus(true);
+		final TextBox nameField = new TextBox();
+		nameField.setText("New Effect");
+		
+		final Button doneButton = new Button("Done");
+		doneButton.setStylePrimaryName("DoneStyle");
+		doneButton.setTitle("The EPT is complete");
+		doneButton.addClickHandler(new ClickHandler(){
+			public void onClick(ClickEvent e){
+				return;
+			}
+		});
+		
+		final TextBox marginalEvent = new TextBox();
+		marginalEvent.setText("0");
+		marginalEvent.setTitle("Index of powerset of base events in order added");
+		
+		final TextBox currentValue = new TextBox();
+		currentValue.setTitle("Current probability of indexed event");
+		currentValue.setText("1.0");
+		currentValue.setReadOnly(true);
+		
+		final Label lowerBound = new Label();
+		lowerBound.setText("<=");
+		lowerBound.setTitle("Minimum value of indexed event");
+		lowerBound.setStylePrimaryName("lowerBound");
+
+		final TextBox newValue = new TextBox();
+		newValue.setText("1.0");
+		newValue.setTitle("Edit probability of indexed event");
+		
+		final Label upperBound = new Label();
+		upperBound.setText(">=");
+		upperBound.setTitle("Maximum value of indexed event");
+		
+		final Button setValueButton = new Button("Set Value");
+		setValueButton.setFocus(false);
+		setValueButton.setEnabled(false);
+		setValueButton.setStyleName("valueButton");
+		
+		final Button showMarginalButton = new Button("Show Marginal");
+		showMarginalButton.setStylePrimaryName("showMarginal");
+		
+		final Button correlationListOK = new Button("Correlation List OK");
+		correlationListOK.setStylePrimaryName("correlationListOK");
+		correlationListOK.setEnabled(false);
+		correlationListOK.setVisible(false);
+		
+		final Grid marginalGrid = new Grid(64,2);
+		marginalGrid.setBorderWidth(0);
+		marginalGrid.setText(0, 0, "1.0");
+		
+		final Grid jointGrid = new Grid(64,2);
+		jointGrid.setStylePrimaryName("jointGrid");
+		jointGrid.setBorderWidth(1);
+		jointGrid.setText(0, 00, "1.0");
+		
+		final ScrollPanel marginalScrollPanel = new ScrollPanel(marginalGrid);
+		marginalScrollPanel.setHeight("200px");
+		marginalScrollPanel.setAlwaysShowScrollBars(true);
+		final ScrollPanel jointScrollPanel = new ScrollPanel(jointGrid);
+		jointScrollPanel.setHeight("200px");
+		jointScrollPanel.setAlwaysShowScrollBars(true);
+
+		// We can add style names to widgets
+		
+		final ArrayList<CheckBox> checkBoxList = new ArrayList<CheckBox>();
+		final FlexTable corTable = new FlexTable();
+//		RootPanel.setStyleName("outerFrame");
+		
+		
+		RootPanel.get("currentStepContainer").add(currentStep);
+		RootPanel.get("correlationListContainer").add(corTable);
+		RootPanel.get("extendButtonContainer").add(extendButton);
+		RootPanel.get("addEventContainer").add(addEventButton);
+		RootPanel.get("doneContainer").add(doneButton);
+		RootPanel.get("marginalEventContainer").add(marginalEvent);
+		RootPanel.get("currentValueContainer").add(currentValue);
+		RootPanel.get("lowerBoundContainer").add(lowerBound);
+		RootPanel.get("newValueContainer").add(newValue);
+		RootPanel.get("upperBoundContainer").add(upperBound);
+		RootPanel.get("setValueContainer").add(setValueButton);
+		RootPanel.get("marginalGridContainer").add(marginalScrollPanel);
+		RootPanel.get("jointGridContainer").add(jointScrollPanel);
+		RootPanel.get("showMarginalButtonContainer").add(showMarginalButton);
+		RootPanel.get("correlationListOKContainer").add(correlationListOK);
+
+		// Focus the cursor on the name field when the app loads
+		nameField.setFocus(true);
+		nameField.selectAll();
+
+		// Create the popup dialog box for adding a new event (name)
+		final DialogBox addEventDialogBox = new DialogBox();
+		addEventDialogBox.setText("Name New Event");
+		addEventDialogBox.setAnimationEnabled(true);
+		final TextBox eventField = new TextBox();
+		VerticalPanel dialogVPanel = new VerticalPanel();
+		dialogVPanel.addStyleName("dialogVPanel");
+		dialogVPanel.add(new HTML("Enter Name"));
+		dialogVPanel.add(eventField);
+		dialogVPanel.setHorizontalAlignment(VerticalPanel.ALIGN_RIGHT);
+		dialogVPanel.add(extendButton);
+		addEventDialogBox.setWidget(dialogVPanel);
+		
+		//Add a handler for "show marginal"
+		
+		class ShowMarginal implements ClickHandler{
+			public void onClick(ClickEvent event){
+				getMarginal();
+			}
+
+			private void getMarginal() {
+				EPTService.getMarginalDistribution(
+						new AsyncCallback<String[]>(){
+							public void onFailure(Throwable caught){
+								
+							}
+							public void onSuccess(String[] marginalDistribution){
+								int j = 0;
+								for(String prob: marginalDistribution){
+									marginalGrid.setText(j, 0, Integer.toString(j));
+									marginalGrid.setText(j, 1, prob);
+									j++;
+								}
+							}
+						});
+			}			
+		}
+		final ShowMarginal showMarginal = new ShowMarginal();
+		showMarginalButton.addClickHandler(showMarginal);
+		
+
+		class Extender implements ClickHandler, KeyUpHandler{
+			Extender(){
+				
+				correlationListOK.setEnabled(false);
+				correlationListOK.addClickHandler(new ClickHandler() {
+					public void onClick(ClickEvent event){
+						correlationListOK.setEnabled(false);
+						currentStep.setText("Provide probabilities.");
+						coreExtender();
+					}
+				});
+			}
+			public void onClick(ClickEvent event){
+				getCorrelatesAndExtend();
+			}
+			public void onKeyUp(KeyUpEvent event) {
+				if(event.getNativeKeyCode() == KeyCodes.KEY_ENTER){
+					getCorrelatesAndExtend();
+				}
+			}
+			private void getCorrelatesAndExtend(){
+				nameField.setText(eventField.getText());
+				eventField.setText("");
+				addEventDialogBox.hide();
+				CheckBox nextCB = new CheckBox(nameField.getText());
+				nextCB.setEnabled(false);
+				nextCB.setValue(true);
+				int oldCorCount = corTable.getRowCount();
+				corTable.setWidget(oldCorCount, 0, nextCB);
+				checkBoxList.add(nextCB);
+				if(oldCorCount > 0){
+					correlationListOK.setVisible(true);
+					correlationListOK.setEnabled(true);
+					extendButton.setEnabled(false);
+					currentStep.setText("Make sure important correlates (only) are checked; then push 'Correlates OK' button.");
+				}else{
+					correlationListOK.setEnabled(false);
+					currentStep.setText("Provide probabilities.");
+					coreExtender();
+				}
+			}
+			private void coreExtender() {
+				int correlators[] = new int[32];
+				int cCount = 0; // the number of events to be used as constraints
+				int cbCount = 0;
+				extendButton.setEnabled(false);
+				int cblLen = checkBoxList.size() - 1;// the new CB take out of length
+				for(int k = 0; k < cblLen; k++){// get the checked boxes (except for the new variable) and put them in the list first
+					if(checkBoxList.get(k).getValue()){
+					correlators[cCount++] = k;
+					}
+				}
+				int ncCount = cCount;
+				cbCount = 0;
+				for(CheckBox x: checkBoxList){// puts the on checked boxes in the list
+					if(! x.getValue()){// depends on CB for new value being checked
+						correlators[ncCount++] = cbCount;
+					}
+					cbCount++;
+				}
+				correlators[cbCount-1] = cbCount - 1;// this correctly puts the new event in the list last
+				EPTService.MMCALC(nameField.getText(), correlators, cCount,
+						new AsyncCallback<String[]>() {
+					public void onFailure(Throwable caught) {
+						// Show the RPC error message to the user
+						/*
+						dialogBox
+								.setText("Remote Procedure Call - Failure");
+						serverResponseLabel
+								.addStyleName("serverResponseLabelError");
+						serverResponseLabel.setHTML(SERVER_ERROR);
+						dialogBox.center();
+						closeButton.setFocus(true);
+						*/
+					}
+
+					public void onSuccess(String[]range) {
+						// range = {cv, down, up, next}
+						lowerBound.setText(range[1]);
+						currentValue.setText(range[0]);
+						upperBound.setText(range[2]);
+						for(CheckBox x: checkBoxList){
+							x.setEnabled(true);
+						}
+						marginalEvent.setText(nameField.getText());
+						nameField.setText(null);
+						extendButton.setEnabled(false);
+						nameField.setEnabled(false);
+						nameField.setText("");
+						setValueButton.setEnabled(true);
+						correlationListOK.setEnabled(false);
+						newValue.setFocus(true);
+						newValue.selectAll();
+					}
+				});// end of MMCALC
+			}
+		}
+		Extender extender = new Extender();
+		extendButton.addClickHandler(extender);
+		eventField.addKeyUpHandler(extender);
+		
+		class SetValueHandler implements ClickHandler, KeyUpHandler{
+			public void onClick(ClickEvent event) {
+				coreSetValue( );	
+			}
+			private void coreSetValue() {
+				//get the new probability value over to mmc which has hopefully been initialized
+				double desiredValue = new Double(newValue.getText());
+				EPTService.MMCALC(desiredValue, 
+					new AsyncCallback<String[]>(){
+						public void onFailure(Throwable caught){
+							
+						}
+						public void onSuccess(String[]range){//setValue
+							// range = {cv, down, up, next}
+							if(range[3].equals(new String("done"))){
+								setValueButton.setEnabled(false);
+								extendButton.setEnabled(true);
+								nameField.setEnabled(true);
+								marginalEvent.setText("");
+								newValue.setText("");
+								currentValue.setText("");
+								nameField.setFocus(true);
+								addEventButton.setEnabled(true);
+								addEventButton.setFocus(true);
+								currentStep.setText("Ready to Add an Effect");
+							}else{
+								lowerBound.setText(range[1]);
+								currentValue.setText(range[0]);
+								upperBound.setText(range[2]);
+								for(CheckBox x: checkBoxList){
+									x.setEnabled(true);
+								}
+								marginalEvent.setText(range[3]);
+								setValueButton.setEnabled(true);
+								newValue.setText(range[0]);
+								newValue.selectAll();								
+							}
+							showMarginal.getMarginal();
+						}							
+					});
+			}
+			public void onKeyUp(KeyUpEvent event) {
+				if(event.getNativeKeyCode() == KeyCodes.KEY_ENTER){
+					coreSetValue();
+				}
+			}
+		}
+		SetValueHandler settingValue = new SetValueHandler();
+		setValueButton.addClickHandler(settingValue);
+		newValue.addKeyUpHandler(settingValue);
+
+		class AddEventClickHandler implements ClickHandler{
+			public void onClick(ClickEvent theClick){
+				coreEventAdder();
+			}
+			public void onKeyUp(KeyUpEvent event) {
+				if(event.getNativeKeyCode() == KeyCodes.KEY_ENTER){
+					coreEventAdder();
+				}
+			}
+			private void coreEventAdder(){
+				addEventButton.setEnabled(false);
+				addEventDialogBox.center();
+				eventField.setFocus(true);				
+			}
+			
+		}
+		addEventButton.addClickHandler(new AddEventClickHandler());
+	}
+}
