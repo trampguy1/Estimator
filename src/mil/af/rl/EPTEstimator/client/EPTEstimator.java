@@ -127,7 +127,7 @@ try{
 		newValue.setTitle("Edit probability of indexed event");
 		
 		final Label upperBound = new Label();
-		upperBound.setText(">=");
+		upperBound.setText("<=");
 		upperBound.setTitle("Maximum value of indexed event");
 		
 		final Button setValueButton = new Button("Set Value");
