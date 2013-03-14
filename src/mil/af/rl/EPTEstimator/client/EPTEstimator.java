@@ -96,6 +96,9 @@ try{
 		currentStep.setReadOnly(true);
 		currentStep.setStylePrimaryName("currentStep");
 		
+		final TextArea indexExpansion = new TextArea();
+		indexExpansion.setText("This is the Expansion Area showing up");
+		
 		final Button extendButton = new Button("Extend"); 
 		
 		final Button addEventButton = new Button("Add Effect");
@@ -223,6 +226,7 @@ try{
 
 		
 		RootPanel.get("currentStepContainer").add(currentStep);
+		RootPanel.get("indexExpander").add(indexExpansion);
 		RootPanel.get("correlationListContainer").add(corTable);
 		RootPanel.get("extendButtonContainer").add(extendButton);
 		RootPanel.get("addEventContainer").add(addEventButton);
